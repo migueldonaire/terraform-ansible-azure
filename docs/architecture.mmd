@@ -1,0 +1,42 @@
+flowchart TB
+
+User[User / Internet]
+
+subgraph Azure
+    subgraph ResourceGroup[Resource Group: rg-casopractico2]
+
+        subgraph VMInfra[Virtual Machine Infrastructure]
+            VM[Linux VM]
+            Podman[Podman Container Engine]
+            Web[Web Server Container<br>NGINX/Apache]
+        end
+
+        subgraph Registry[Azure Container Registry]
+            ACR[ACR<br>acrcasopractico2madp]
+        end
+
+        subgraph Kubernetes[Azure Kubernetes Service]
+            AKS[AKS Cluster]
+
+            subgraph App[Application]
+                Frontend[Frontend Pod]
+                Backend[Backend Pod]
+                PVC[Persistent Volume Claim]
+            end
+        end
+
+        PublicIP[Public IP]
+    end
+end
+
+User --> PublicIP
+PublicIP --> VM
+VM --> Podman
+Podman --> Web
+
+ACR --> Podman
+ACR --> AKS
+
+AKS --> Frontend
+Frontend --> Backend
+Backend --> PVC
