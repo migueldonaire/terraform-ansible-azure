@@ -1,0 +1,8 @@
+[vm]
+20.100.197.230 ansible_user=azureuser ansible_ssh_private_key_file=../terraform/private_key.pem
+
+[local]
+localhost ansible_connection=local
+
+[all:vars]
+acr_name=acrcasopractico2madp

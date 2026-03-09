@@ -1,0 +1,28 @@
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install podman
+  ansible.builtin.apt:
+    name: podman
+    state: present
+
+- name: Login to Azure Container Registry
+  containers.podman.podman_login:
+    registry: "{{ acr_name }}.azurecr.io"
+    username: "{{ lookup('env','ACR_USERNAME') }}"
+    password: "{{ lookup('env','ACR_PASSWORD') }}"
+
+- name: Pull nginx image from ACR
+  containers.podman.podman_image:
+    name: "{{ acr_name }}.azurecr.io/nginx"
+    tag: casopractico2
+    pull: yes
+
+- name: Run nginx container
+  containers.podman.podman_container:
+    name: webserver
+    image: "{{ acr_name }}.azurecr.io/nginx:casopractico2"
+    state: started
+    ports:
+      - "80:80"

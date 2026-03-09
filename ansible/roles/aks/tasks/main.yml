@@ -1,0 +1,46 @@
+- name: Get ACR credentials
+  command: az acr credential show --name acrcasopractico2madp
+  register: acr_credentials
+  changed_when: false
+
+- name: Parse ACR credentials
+  set_fact:
+    acr_username: "{{ (acr_credentials.stdout | from_json).username }}"
+    acr_password: "{{ (acr_credentials.stdout | from_json).passwords[0].value }}"
+
+- name: Build dockerconfigjson
+  set_fact:
+    dockerconfigjson: "{{ {
+      'auths': {
+        'acrcasopractico2madp.azurecr.io': {
+          'username': acr_username,
+          'password': acr_password,
+          'auth': (acr_username + ':' + acr_password) | b64encode
+        },
+      }} | to_json | b64encode }}"
+
+- name: Create ACR secret
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: acr-secret
+        namespace: default
+      type: kubernetes.io/dockerconfigjson
+      data:
+        .dockerconfigjson: "{{ dockerconfigjson }}"
+
+- name: Deploy resources to AKS
+  kubernetes.core.k8s:
+    state: present
+    namespace: default
+    src: "{{ item }}"
+  loop:
+    - pvc.yaml
+    - pv.yaml
+    - redis-deployment.yaml
+    - front-deployment.yaml
+    - service.yaml
+    - redis-service.yaml

@@ -1,0 +1,21 @@
+---
+- name: Login to Azure Container Registry
+  containers.podman.podman_login:
+    registry: "{{ acr_name }}.azurecr.io"
+    username: "{{ lookup('env','ACR_USERNAME') }}"
+    password: "{{ lookup('env','ACR_PASSWORD') }}"
+
+- name: Pull nginx image
+  containers.podman.podman_image:
+    name: docker.io/library/nginx
+    tag: latest
+    pull: yes
+    arch: amd64
+
+- name: Push nginx image to ACR
+  containers.podman.podman_image:
+    name: docker.io/library/nginx
+    tag: latest
+    push: yes
+    push_args:
+      dest: "{{ acr_name }}.azurecr.io/nginx:casopractico2"

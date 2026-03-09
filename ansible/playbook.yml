@@ -1,0 +1,19 @@
+---
+- name: Setup ACR and upload images
+  hosts: local
+  roles:
+    - role: acr
+      tags: acr
+
+- name: Configure VM and deploy web container
+  hosts: vm
+  become: true
+  roles:
+    - role: vm
+      tags: vm
+
+- name: Deploy application to AKS
+  hosts: local
+  roles:
+    - role: aks
+      tags: aks
