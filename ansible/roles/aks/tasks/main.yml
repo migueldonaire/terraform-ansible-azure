@@ -1,21 +1,20 @@
-- name: Get ACR credentials
-  command: az acr credential show --name acrcasopractico2madp
-  register: acr_credentials
-  changed_when: false
-
-- name: Parse ACR credentials
-  set_fact:
-    acr_username: "{{ (acr_credentials.stdout | from_json).username }}"
-    acr_password: "{{ (acr_credentials.stdout | from_json).passwords[0].value }}"
+- name: Create namespace
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: casopractico2
 
 - name: Build dockerconfigjson
   set_fact:
     dockerconfigjson: "{{ {
       'auths': {
-        'acrcasopractico2madp.azurecr.io': {
-          'username': acr_username,
-          'password': acr_password,
-          'auth': (acr_username + ':' + acr_password) | b64encode
+        (acr_name + '.azurecr.io'): {
+          'username': lookup('env','ACR_USERNAME'),
+          'password': lookup('env','ACR_PASSWORD'),
+          'auth': (lookup('env','ACR_USERNAME') + ':' + lookup('env','ACR_PASSWORD')) | b64encode
         },
       }} | to_json | b64encode }}"
 
@@ -27,7 +26,7 @@
       kind: Secret
       metadata:
         name: acr-secret
-        namespace: default
+        namespace: casopractico2
       type: kubernetes.io/dockerconfigjson
       data:
         .dockerconfigjson: "{{ dockerconfigjson }}"
@@ -35,11 +34,10 @@
 - name: Deploy resources to AKS
   kubernetes.core.k8s:
     state: present
-    namespace: default
-    src: "{{ item }}"
+    namespace: casopractico2
+    src: "{{ role_path }}/files/{{ item }}"
   loop:
     - pvc.yaml
-    - pv.yaml
     - redis-deployment.yaml
     - front-deployment.yaml
     - service.yaml

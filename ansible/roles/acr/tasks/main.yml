@@ -19,3 +19,33 @@
     push: yes
     push_args:
       dest: "{{ acr_name }}.azurecr.io/nginx:casopractico2"
+
+- name: Pull redis image
+  containers.podman.podman_image:
+    name: docker.io/library/redis
+    tag: "6.0.8"
+    pull: yes
+    arch: amd64
+
+- name: Push redis image to ACR
+  containers.podman.podman_image:
+    name: docker.io/library/redis
+    tag: "6.0.8"
+    push: yes
+    push_args:
+      dest: "{{ acr_name }}.azurecr.io/redis:6.0.8"
+
+- name: Pull azure-vote-front image
+  containers.podman.podman_image:
+    name: mcr.microsoft.com/azuredocs/azure-vote-front
+    tag: v1
+    pull: yes
+    arch: amd64
+
+- name: Push azure-vote-front image to ACR
+  containers.podman.podman_image:
+    name: mcr.microsoft.com/azuredocs/azure-vote-front
+    tag: v1
+    push: yes
+    push_args:
+      dest: "{{ acr_name }}.azurecr.io/azure-vote-front:latest"
