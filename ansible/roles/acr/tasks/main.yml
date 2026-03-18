@@ -42,19 +42,13 @@
     version: master
     force: yes
 
-- name: Fix Debian Buster EOL apt sources in Dockerfile
-  ansible.builtin.lineinfile:
-    path: /tmp/azure-voting-app/azure-vote/Dockerfile-for-app-service
-    insertbefore: 'RUN  mkdir -p /home/LogFiles'
-    line: "RUN sed -i -e 's/deb.debian.org/archive.debian.org/g' -e 's|security.debian.org/debian-security|archive.debian.org/debian-security|g' -e '/buster-updates/d' /etc/apt/sources.list"
-
 - name: Build azure-vote-front image
   containers.podman.podman_image:
     name: azure-vote-front
     tag: latest
-    path: /tmp/azure-voting-app/azure-vote
+    path: /tmp/azure-voting-app
     build:
-      file: /tmp/azure-voting-app/azure-vote/Dockerfile-for-app-service
+      file: /tmp/azure-voting-app/azure-vote/Dockerfile
 
 - name: Push azure-vote-front image to ACR
   containers.podman.podman_image:
