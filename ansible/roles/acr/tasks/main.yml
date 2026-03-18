@@ -35,17 +35,31 @@
     push_args:
       dest: "{{ acr_name }}.azurecr.io/redis:6.0.8"
 
-- name: Pull azure-vote-front image
+- name: Clone azure-voting-app repository
+  ansible.builtin.git:
+    repo: https://github.com/ptaritepui/azure-voting-app.git
+    dest: /tmp/azure-voting-app
+    version: master
+    force: yes
+
+- name: Fix Debian Buster EOL apt sources in Dockerfile
+  ansible.builtin.lineinfile:
+    path: /tmp/azure-voting-app/azure-vote/Dockerfile-for-app-service
+    insertbefore: 'RUN  mkdir -p /home/LogFiles'
+    line: "RUN sed -i -e 's/deb.debian.org/archive.debian.org/g' -e 's|security.debian.org/debian-security|archive.debian.org/debian-security|g' -e '/buster-updates/d' /etc/apt/sources.list"
+
+- name: Build azure-vote-front image
   containers.podman.podman_image:
-    name: mcr.microsoft.com/azuredocs/azure-vote-front
-    tag: v1
-    pull: yes
-    arch: amd64
+    name: azure-vote-front
+    tag: latest
+    path: /tmp/azure-voting-app/azure-vote
+    build:
+      file: /tmp/azure-voting-app/azure-vote/Dockerfile-for-app-service
 
 - name: Push azure-vote-front image to ACR
   containers.podman.podman_image:
-    name: mcr.microsoft.com/azuredocs/azure-vote-front
-    tag: v1
+    name: azure-vote-front
+    tag: latest
     push: yes
     push_args:
       dest: "{{ acr_name }}.azurecr.io/azure-vote-front:latest"
